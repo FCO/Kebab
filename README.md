@@ -1,4 +1,4 @@
-``
+```
 $ perl6 test.p6
 read: 0
 write: 0
