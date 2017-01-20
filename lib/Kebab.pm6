@@ -1,9 +1,9 @@
 constant size   = 256;
 constant max    = 256;
 
-class Stream {
-	has $!write = open "streem", :w;
-	has $!read  = open "streem", :r;
+class Shard {
+	has $!write = open "stream", :w;
+	has $!read  = open "stream", :r;
 
 	method add(Blob $data) {
 		$!write.seek(0, SeekFromEnd);
