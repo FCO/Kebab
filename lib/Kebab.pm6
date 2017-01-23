@@ -11,16 +11,16 @@ class Shard {
 			}
 		}
 	}
-	has $!read  = open "stream", :r;
 
 	method add(Blob $data) {
 		$!write-channel.send: $data.subbuf: ^size;
 	}
 
-	method get(Int $pos is rw, Int $records = 1) {
-		$!read.seek($pos * size, SeekFromBeginning);
-		my $ret = $!read.read: size * $records;
-		$pos += Int($ret.elems / size);
+	method get(Int $pos, Int $records = 1) {
+		return unless "stream".IO.e;
+		my $read  = open "stream", :r;
+		$read.seek($pos × size, SeekFromBeginning);
+		my $ret = $read.read: size × $records;
 		$ret.rotor(size, :partial).map: -> @data { utf8.new: @data }
 	}
 }
