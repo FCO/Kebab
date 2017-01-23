@@ -2,14 +2,15 @@ use lib "lib";
 use Kebab;
 
 my @a.push: start {
-	my $s = Stream.new;
+	my $s = Shard.new;
 	for ^10 {
-		say "write: ", $s.add: "value: $_".encode
+		$s.add: "value: $_".encode;
+		say "write: $_"
 	}
 }
 
 @a.push: start {
-	my $s = Stream.new;
+	my $s = Shard.new;
 	my $pos = 0;
 	for ^10 {
 		say "read: $pos";
