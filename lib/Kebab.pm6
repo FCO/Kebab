@@ -1,13 +1,38 @@
-constant size   = 256;
-constant max    = 256;
+constant size		= 256;
+constant max-size	= 256;
 
 class Shard {
-	has Channel $!write-channel .= new;
-	has Promise $!writing		= start {
-		my $write = open "stream", :a;
-		react {
-			whenever $!write-channel -> Blob $data where *.elems == size {
-				$write.write: $data
+	has Str			$.stream-name	= "stream";
+	has IO::Path	$.root-dir		.= new: ".";
+	has IO::Path	$.stream-dir	= $!root-dir.child: $!stream-name;
+	has Int			$!last-pos		= 0;
+	has Channel		$!write-channel .= new;
+	has Promise		$!writing		= self!start-writing;
+
+	method !initial-file(--> IO::Path) {
+		my IO::Path %files{Int}	= $!stream-dir.dir.classify({ .basename.Int });
+		my Int $file-num		= %files.keys.max;
+		my IO::Path $file		= %files{$file-num};
+		$!last-pos				= $file-num × max-size + $file.s ÷ size;
+		$file
+	}
+
+	method !file-from-pos(Int $pos) {
+		$!stream-dir.child: $pos div max-size
+	}
+
+	method !start-writing {
+		my $write = self!initial-file.open: :a;
+		start {
+			react {
+				whenever $!write-channel -> Blob $data where *.elems == size {
+					$write.write: $data;
+					my $file = self!file-from-pos(++$!last-pos);
+					if $file !~~ $write {
+						$write.close;
+						$write = $file.open: :a
+					}
+				}
 			}
 		}
 	}
