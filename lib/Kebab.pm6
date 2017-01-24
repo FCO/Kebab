@@ -4,9 +4,11 @@ has Int			$.max-file-size	= 256;
 has Str			$.stream-name	= "stream";
 has IO::Path	$.root-dir		.= new: ".";
 has IO::Path	$.stream-dir	= self!set-stream-dir;
+has Duration	$.ttl			.= new: 2 * 60 * 60;
 has Int			$!last-pos		= 0;
 has Channel		$!write-channel .= new;
 has Promise		$!writing		= self!start-writing;
+has Promise		$!cleaning		= self!start-cleaning;
 
 method !set-stream-dir(--> IO::Path) {
 	my $dir = $!root-dir.child: $!stream-name;
@@ -26,6 +28,16 @@ method !initial-file(--> IO::Path) {
 
 method !file-from-pos(Int $pos --> IO::Path) {
 	$!stream-dir.child: $pos div $!max-file-size
+}
+
+method !start-cleaning(--> Promise) {
+	start {
+		react {
+			whenever Supply.interval($!ttl div 4) {
+				$!stream-dir.dir.grep({ .modified > now - $!ttl })>>.unlink
+			}
+		}
+	}
 }
 
 method !start-writing(--> Promise) {
