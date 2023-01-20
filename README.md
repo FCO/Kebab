@@ -1,2 +1,2 @@
-➜  Kebab git:(master) ✗ raku test.p6
+$ raku test.p6
 test => blablabla: 345
