@@ -1,22 +1,13 @@
 use lib "lib";
-use Kebab;
+use Kebab::Shard;
 
-my @a;
-my $s = Shard.new;
-for ^10 {
-	@a.push: start {
-		$s.add: "value: $_".encode;
-		say "write: $_"
-	}
+my Kebab::Shard $s .= new;
+my $p = $s.start;
+
+for ^500 {
+	$s.add: "test", "blablabla: $_"
 }
 
-my $pos = 0;
-for ^10 {
-	say "read: $pos";
-	for $s.get($pos, 3).map: { .decode } -> $data {
-		say "DATA: $data";
-		$pos++
-	}
-}
+my (Str $key, utf8 $value) := await($s.get: 345);
 
-await @a;
+say "$key => { $value.Str }";
